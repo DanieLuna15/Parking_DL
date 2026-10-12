@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ParkinGo - Probador Visual de API</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background-color: #F8FAFC; color: #0F172A; padding: 30px 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header { margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; }
+    .badge { background: #2563EB; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .card { background: white; border-radius: 16px; padding: 22px; border: 1px solid #E2E8F0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    h2 { font-size: 17px; margin-bottom: 14px; color: #1E293B; display: flex; align-items: center; gap: 8px; }
+    button {
+      background: #2563EB; color: white; border: none; padding: 10px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 6px; margin-right: 6px;
+    }
+    button:hover { background: #1D4ED8; }
+    button.btn-green { background: #10B981; }
+    button.btn-green:hover { background: #059669; }
+    button.btn-orange { background: #F59E0B; }
+    button.btn-orange:hover { background: #D97706; }
+    button.btn-red { background: #EF4444; }
+    button.btn-red:hover { background: #DC2626; }
+    .input-group { margin-bottom: 12px; }
+    label { font-size: 12px; font-weight: 600; color: #64748B; display: block; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-size: 14px; }
+    pre {
+      background: #0F172A; color: #38BDF8; padding: 16px; border-radius: 12px; font-size: 12px;
+      overflow-x: auto; max-height: 480px; line-height: 1.5; white-space: pre-wrap;
+    }
+    .token-box { background: #EFF6FF; border: 1px dashed #3B82F6; padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 18px; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 style="font-size: 26px; font-weight: 800; color: #2563EB;">🚗 ParkinGo API Tester</h1>
+        <p style="color: #64748B; font-size: 14px; margin-top: 4px;">Prueba interactiva directa de todos los endpoints de Laravel 11</p>
+      </div>
+      <span class="badge">API v1 Activa (Puerto 8000)</span>
+    </header>
+
+    <div class="token-box" id="tokenDisplay">
+      <strong>Token de Autenticación:</strong> <span id="tokenText">No autenticado. Pulsa "Iniciar Sesión" abajo.</span>
+    </div>
+
+    <div class="grid">
+      <!-- Columna Izquierda: Acciones -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+
+        <!-- 1. Login -->
+        <div class="card">
+          <h2>🔐 1. Autenticación (Login)</h2>
+          <div class="input-group">
+            <label>Correo Electrónico:</label>
+            <input type="text" id="loginEmail" value="admin@parkingo.com">
+          </div>
+          <div class="input-group">
+            <label>Contraseña:</label>
+            <input type="password" id="loginPass" value="password123">
+          </div>
+          <button onclick="login()">Iniciar Sesión y Obtener Token</button>
+          <button class="btn-orange" onclick="loginPIN()">Login con PIN (1234)</button>
+        </div>
+
+        <!-- 2. Dashboard y Catálogos -->
+        <div class="card">
+          <h2>📊 2. Dashboard y Tarifas</h2>
+          <button onclick="getDashboard()">Ver Resumen Dashboard</button>
+          <button onclick="getVehicleTypes()">Listar Tarifas de Vehículos</button>
+        </div>
+
+        <!-- 3. Entrada de Vehículo -->
+        <div class="card">
+          <h2>🟢 3. Registrar Entrada (Vehicle Entry)</h2>
+          <div class="input-group">
+            <label>Placa del Vehículo:</label>
+            <input type="text" id="entryPlate" value="ABC-777">
+          </div>
+          <div class="input-group">
+            <label>Tipo de Vehículo:</label>
+            <select id="entryType">
+              <option value="1">1 - Motocicleta ($3.00/h)</option>
+              <option value="2" selected>2 - Automóvil ($5.00/h)</option>
+              <option value="3">3 - Camioneta ($7.00/h)</option>
+            </select>
+          </div>
+          <button class="btn-green" onclick="registerEntry()">Registrar Entrada e Imprimir Ticket</button>
+          <button onclick="getVehiclesInside()">Listar Vehículos Adentro</button>
+        </div>
+
+        <!-- 4. Salida y Cobro -->
+        <div class="card">
+          <h2>🔴 4. Salida y Cobro (Vehicle Exit)</h2>
+          <div class="input-group">
+            <label>Placa o Folio de Ticket a Cobrar:</label>
+            <input type="text" id="exitSearch" value="B 1234 KLM">
+          </div>
+          <button class="btn-orange" onclick="calculateExit()">1. Cotizar Tarifa (Tiempo y Cobro)</button>
+          <button class="btn-red" onclick="completeExit()">2. Confirmar Pago y Salida</button>
+        </div>
+
+        <!-- 5. Reportes -->
+        <div class="card">
+          <h2>📈 5. Transacciones y Reportes</h2>
+          <button onclick="getTransactions()">Ver Transacciones de Hoy</button>
+          <button onclick="getDailyReport()">Ver Reporte Diario con Gráfico</button>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Respuesta en Vivo -->
+      <div>
+        <div class="card" style="position: sticky; top: 20px;">
+          <h2>💻 Respuesta del Servidor (JSON)</h2>
+          <pre id="responseJson">// Aquí verás la respuesta en tiempo real...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://127.0.0.1:8000/api/v1';
+    let authToken = localStorage.getItem('parkingo_token') || '';
+
+    if (authToken) {
+      document.getElementById('tokenText').innerText = authToken;
+    }
+
+    function showResponse(data) {
+      document.getElementById('responseJson').innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function login() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPass').value;
+      const res = await fetch(`${BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      showResponse(data);
+      if (data.success && data.data.token) {
+        authToken = data.data.token;
+        localStorage.setItem('parkingo_token', authToken);
+        document.getElementById('tokenText').innerText = authToken;
+      }
+    }
+
+    async function loginPIN() {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ pin_code: '1234' })
+      });
+      const data = await res.json();
+      showResponse(data);
+      if (data.success && data.data.token) {
+        authToken = data.data.token;
+        localStorage.setItem('parkingo_token', authToken);
+        document.getElementById('tokenText').innerText = authToken;
+      }
+    }
+
+    async function apiGet(endpoint) {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
+        headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${authToken}` }
+      });
+      const data = await res.json();
+      showResponse(data);
+      return data;
+    }
+
+    function getDashboard() { apiGet('/dashboard/summary'); }
+    function getVehicleTypes() { apiGet('/vehicle-types'); }
+    function getVehiclesInside() { apiGet('/entries?status=inside'); }
+    function getTransactions() { apiGet('/transactions?period=today'); }
+    function getDailyReport() { apiGet('/reports/daily'); }
+
+    async function registerEntry() {
+      const license_plate = document.getElementById('entryPlate').value;
+      const vehicle_type_id = parseInt(document.getElementById('entryType').value);
+      const res = await fetch(`${BASE_URL}/entries`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ license_plate, vehicle_type_id, notes: 'Ingresado desde API Tester' })
+      });
+      const data = await res.json();
+      showResponse(data);
+    }
+
+    let lastCalculatedEntryId = 1;
+
+    async function calculateExit() {
+      const query = document.getElementById('exitSearch').value;
+      const res = await fetch(`${BASE_URL}/exits/calculate?query=${encodeURIComponent(query)}`, {
+        headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${authToken}` }
+      });
+      const data = await res.json();
+      showResponse(data);
+      if (data.success && data.data.entry_id) {
+        lastCalculatedEntryId = data.data.entry_id;
+      }
+    }
+
+    async function completeExit() {
+      const res = await fetch(`${BASE_URL}/exits/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          entry_id: lastCalculatedEntryId,
+          payment_method: 'cash',
+          discount_amount: 0.00,
+          notes: 'Cobro procesado desde Tester'
+        })
+      });
+      const data = await res.json();
+      showResponse(data);
+    }
+  </script>
+</body>
+</html>
