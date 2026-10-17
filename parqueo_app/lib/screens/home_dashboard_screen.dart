@@ -7,6 +7,7 @@ import 'vehicles_list_screen.dart';
 import 'transactions_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
+import 'payment_methods_screen.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToVehicles;
@@ -327,6 +328,63 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                       },
                     ),
                   ],
+                ),
+                const SizedBox(height: 18),
+
+                // 5. Banner de Acceso Rápido a Formas de Pago & QR
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PaymentMethodsScreen()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.cardBorder),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.qr_code_scanner_rounded, color: AppColors.primary, size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Formas de Pago y Cobro QR',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Configura tus métodos de cobro, cuentas y QR',
+                                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

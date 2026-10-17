@@ -4,6 +4,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 import '../core/constants/app_colors.dart';
 import '../core/services/api_service.dart';
+import '../core/widgets/app_alert.dart';
 import 'main_navigation_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -21,11 +22,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = true;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isConnectionError = false;
 
   Future<void> _handleLogin() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _isConnectionError = false;
     });
 
     final email = _emailController.text.trim();
@@ -45,8 +48,16 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       setState(() {
+        _isConnectionError = result['is_connection_error'] == true;
         _errorMessage = result['message'] ?? 'Credenciales incorrectas';
       });
+      if (mounted) {
+        AppAlert.error(
+          context,
+          result['message'] ?? 'Credenciales incorrectas. Verifica tu usuario y contraseña.',
+          title: _isConnectionError ? 'Sin conexión al servidor' : 'Error de inicio de sesión',
+        );
+      }
     }
   }
 
@@ -140,16 +151,91 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.error.withOpacity(0.3)),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(color: AppColors.error, fontSize: 13),
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: AppColors.error, fontSize: 13, height: 1.3),
+                            ),
+                          ),
+                        ],
                       ),
+                      if (_isConnectionError ||
+                          _errorMessage!.contains('conectar') ||
+                          _errorMessage!.contains('conexión') ||
+                          _errorMessage!.contains('127.0.0.1')) ...[
+                        const SizedBox(height: 10),
+                        const Divider(height: 1, color: Color(0xFFFCA5A5)),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Cambiar método de conexión y reintentar:',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            InkWell(
+                              onTap: () async {
+                                await ApiService().setBaseUrl('http://192.168.0.150:8000/api/v1');
+                                _handleLogin();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.primary, width: 1.2),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.wifi_rounded, size: 14, color: AppColors.primary),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Wi-Fi (192.168.0.150)',
+                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () async {
+                                await ApiService().setBaseUrl('http://127.0.0.1:8000/api/v1');
+                                _handleLogin();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.cardBorder, width: 1.2),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.usb_rounded, size: 14, color: AppColors.textPrimary),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Cable USB (127.0.0.1)',
+                                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -344,16 +430,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void _simulateGoogleLogin() {
     setState(() => _isLoading = true);
     Future.delayed(const Duration(milliseconds: 900), () {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Autenticado exitosamente con Google: daniel.luna@gmail.com'),
-          backgroundColor: AppColors.success,
-        ),
       );
     });
   }
@@ -365,11 +446,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!isDeviceSupported && !canCheckBiometrics) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tu teléfono no cuenta con sensor biométrico o no está habilitado.'),
-            backgroundColor: AppColors.warning,
-          ),
+        AppAlert.warning(
+          context,
+          'Tu teléfono no cuenta con sensor biométrico o no está habilitado.',
+          title: 'Biometría no disponible',
         );
         return;
       }
@@ -377,11 +457,10 @@ class _LoginScreenState extends State<LoginScreen> {
       final List<BiometricType> availableBiometrics = await _localAuth.getAvailableBiometrics();
       if (availableBiometrics.isEmpty) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No tienes huellas registradas en los ajustes de seguridad de tu teléfono Android.'),
-            backgroundColor: AppColors.warning,
-          ),
+        AppAlert.warning(
+          context,
+          'No tienes huellas registradas en los ajustes de seguridad de tu teléfono Android.',
+          title: 'Sin huellas registradas',
         );
         return;
       }
@@ -422,39 +501,32 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
           );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('¡Huella verificada con éxito! Bienvenido a ParkinGo.'),
-              backgroundColor: AppColors.success,
-            ),
+          AppAlert.success(
+            context,
+            '¡Huella verificada con éxito! Bienvenido a ParkinGo.',
+            title: '¡Autenticado!',
+            autoClose: const Duration(milliseconds: 1800),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Error al iniciar sesión tras validar huella'),
-              backgroundColor: AppColors.error,
-            ),
+          AppAlert.error(
+            context,
+            result['message'] ?? 'Error al iniciar sesión tras validar huella',
+            title: 'Error de autenticación',
           );
         }
       }
     } on PlatformException catch (e) {
       if (!mounted) return;
       if (e.code != 'auth_in_progress' && e.code != 'canceled') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Aviso de sensor de huella: ${e.message ?? e.code}'),
-            backgroundColor: AppColors.warning,
-          ),
+        AppAlert.warning(
+          context,
+          'Aviso de sensor de huella: ${e.message ?? e.code}',
+          title: 'Sensor Biométrico',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al verificar huella: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppAlert.error(context, 'Error al verificar huella: $e', title: 'Error Biométrico');
     }
   }
 
@@ -562,14 +634,17 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                await ApiService().setBaseUrl(controller.text);
-                if (mounted) setState(() {});
+                final newUrl = controller.text;
+                await ApiService().setBaseUrl(newUrl);
+                if (!ctx.mounted) return;
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Servidor configurado: ${controller.text}'),
-                    backgroundColor: AppColors.primary,
-                  ),
+                if (!context.mounted) return;
+                setState(() {});
+                AppAlert.success(
+                  context,
+                  'Servidor configurado correctamente:\n$newUrl',
+                  title: 'Servidor Actualizado',
+                  autoClose: const Duration(milliseconds: 2000),
                 );
               },
               child: const Text('Guardar'),

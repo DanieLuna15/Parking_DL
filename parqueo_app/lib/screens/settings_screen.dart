@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
+import '../core/widgets/app_alert.dart';
+import 'payment_methods_screen.dart';
+import 'vehicle_types_rates_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -29,19 +32,39 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _SettingsTile(
+              icon: Icons.payments_outlined,
+              title: 'Formas de Pago y QR',
+              subtitle: 'Efectivo, QR simple, POS, cuentas bancarias y comprobantes',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PaymentMethodsScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _SettingsTile(
               icon: Icons.price_change_outlined,
               title: 'Ajustes de Tarifas',
-              subtitle: 'Precios por hora, fracción y tolerancia',
+              subtitle: 'Precios por hora, fracción, tolerancia y tarifas planas',
               onTap: () {
-                _showInfoDialog(context, 'Tarifas Actuales', '• Motocicleta: \$3.00/h (Frac: \$1.00)\n• Automóvil: \$5.00/h (Frac: \$1.50)\n• Camión: \$7.00/h (Frac: \$2.00)\nTolerancia de cortesía: 15 minutos');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const VehicleTypesRatesScreen()),
+                );
               },
             ),
             const SizedBox(height: 12),
             _SettingsTile(
               icon: Icons.directions_car_outlined,
               title: 'Tipos de Vehículos',
-              subtitle: 'Gestionar categorías de vehículos',
-              onTap: () {},
+              subtitle: 'Gestionar categorías de vehículos y precios',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const VehicleTypesRatesScreen()),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _SettingsTile(
@@ -89,16 +112,11 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showInfoDialog(BuildContext context, String title, String content) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        content: Text(content, style: const TextStyle(fontSize: 14, height: 1.5)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Entendido')),
-        ],
-      ),
+    AppAlert.info(
+      context,
+      content,
+      title: title,
+      confirmText: 'Entendido',
     );
   }
 
@@ -132,9 +150,7 @@ class SettingsScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Impresión de prueba enviada con éxito.')),
-              );
+              AppAlert.success(context, 'Impresión de prueba enviada con éxito.', title: '¡Imprimiendo!');
             },
             child: const Text('Imprimir Prueba'),
           ),

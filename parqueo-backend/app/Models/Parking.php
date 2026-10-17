@@ -47,6 +47,11 @@ class Parking extends Model
         return $this->hasMany(User::class);
     }
 
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class)->orderBy('order', 'asc');
+    }
+
     public function activeEntriesCount(): int
     {
         return $this->entries()->where('status', 'inside')->count();

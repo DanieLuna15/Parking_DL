@@ -79,6 +79,7 @@ class EntryController extends Controller
                     'cashier' => $entry->user->name,
                     'header' => $entry->parking->receipt_header,
                     'footer' => $entry->parking->receipt_footer,
+                    'ticket_url' => url("/tickets/{$entry->ticket_code}"),
                 ],
             ],
         ], 201);
@@ -124,6 +125,7 @@ class EntryController extends Controller
                 $entry->duration_formatted = "{$hours}h {$mins}m";
                 $entry->duration_minutes = $entry->exit->duration_minutes;
             }
+            $entry->ticket_url = url("/tickets/{$entry->ticket_code}");
             return $entry;
         });
 

@@ -99,6 +99,28 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 );
               },
             ),
+            const Divider(height: 20),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.report_problem_rounded, color: AppColors.error, size: 24),
+              ),
+              title: const Text('Cobro Directo - Ticket Perdido', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.error)),
+              subtitle: const Text('Para clientes que extraviaron su boleto físico', style: TextStyle(fontSize: 12)),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const VehicleExitScreen()),
+                );
+              },
+            ),
             const SizedBox(height: 12),
           ],
         ),
